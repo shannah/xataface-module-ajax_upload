@@ -275,6 +275,7 @@
 						}
 						previewLink.unbind('click');
 						var fileType = $(self).attr('data-xf-file-type');
+						alert(fileType);
 						if ( fileType.indexOf('image/') == 0 ){
 							previewLink.lightBox();
 							previewLink.attr('href', previewUrl);
@@ -464,6 +465,7 @@
 						} else {
 							$(self).attr('data-xf-file-size', file.size);
 							$(self).attr('data-xf-file-name', file.name);
+							$(self).attr('data-xf-file-type', file.type);
 							$(self).val('xftmpimg://'+file.id);
 							update();
 							$(self).trigger('change');

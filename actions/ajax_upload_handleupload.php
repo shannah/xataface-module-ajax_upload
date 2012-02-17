@@ -159,6 +159,7 @@ class actions_ajax_upload_handleupload {
 				'id' => $fileId,
 				'name' => $fileInfo['name'],
 				'size' => filesize($filePath),
+				'type' => $this->getMimeType($filePath),
 				'url' => $fileUrl,
 				'thumbnail_url' => $this->getThumbnail($fileUrl, $filePath),
 				'delete_url' => DATAFACE_SITE_HREF.'?-action=ajax_upload_delete&--file='.urlencode($fileId).'&--field='.urlencode($fieldName).'&-table='.urlencode($tableName).'&--record-id='.urlencode($recordId),
