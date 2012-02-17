@@ -4,13 +4,14 @@ class actions_ajax_upload_handleupload {
 	const VALIDATION_ERROR=501;
 
 	public function handle($params){
-	
+		
 		$app = Dataface_Application::getInstance();
 		$query = $app->getQuery();
 		try {
 			
 			if ( !@$_POST['-table'] ) throw new Exception("No table specified");
 			if ( !@$_POST['--field'] ) throw new Exception("No field specified");
+			
 			
 			$fieldName = $_POST['--field'];
 			$tableName = $_POST['-table'];
