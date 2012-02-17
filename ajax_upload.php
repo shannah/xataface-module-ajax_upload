@@ -61,7 +61,12 @@
 		$ft = Dataface_FormTool::getInstance();
 		$ft->registerWidgetHandler('ajax_upload', dirname(__FILE__).'/widget.php', 'Dataface_FormTool_ajax_upload');
 		
+		$app->registerEventListener('beforeSave', array($this, 'beforeSave'));
 		
+	}
+	
+	function block__head_slot(){
+		echo '<script>XATAFACE_MODULES_AJAX_UPLOAD_URL='.json_encode($this->getBaseURL()).';</script>';
 	}
 	
 	
@@ -102,7 +107,7 @@
 			// This isn't a temp file == do nothing
 			return;
 		}
-		$val = susbstr($val, 11);
+		$val = substr($val, 11);
 		$field =& $record->table()->getField($fieldName);
 		$tmpPath = $field['savepath'].DIRECTORY_SEPARATOR.'uploads';
 		$filePath = $tmpPath.DIRECTORY_SEPARATOR.basename($val);

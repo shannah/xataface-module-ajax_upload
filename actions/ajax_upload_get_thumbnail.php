@@ -25,12 +25,13 @@ class actions_ajax_upload_get_thumbnail {
 		
 		$record = null;
 		if ( $recordId ) $record = df_get_record_by_id($recordId);
-		else $record = new Dataface_Record($query['-table'], array());
+		
+		if ( !$record ) $record = new Dataface_Record($query['-table'], array());
 		
 		$table = Dataface_Table::loadTable($query['-table']);
-		if ( $table->tablename != $record->table()->tablename ){
-			throw new Exception("Table does not match record.");
-		}
+		//if ( is_a($record, 'Dataface_Record') and $table->tablename != $record->table()->tablename ){
+		//	throw new Exception("Table does not match record.");
+		//} else if ( is_a($record, 'Dataface_RelatedRecord') and 
 		
 		if ( !$table->hasField($query['--field']) ){
 			throw new Exception("The specified field does not exist");
@@ -45,10 +46,10 @@ class actions_ajax_upload_get_thumbnail {
 		if ( @$query['--tempfileid'] ){
 			$fieldVal = $query['--tempfileid'];
 		} else {
-		
 			$fieldVal = $record->val($query['--field']);
 			//echo "Field val: ".$fieldVal.']';
 		}
+		
 		$s = DIRECTORY_SEPARATOR;
 		
 		$filePath = $basePath.$s.'images'.$s.'file_not_found.png';
@@ -62,7 +63,6 @@ class actions_ajax_upload_get_thumbnail {
 		if ( $fieldVal ){
 			
 			$testPath = $fieldBaseDir.$s.basename($fieldVal);
-			//echo "[$testPath]";
 			if ( file_exists($testPath) ){
 				$filePath = $testPath;
 				

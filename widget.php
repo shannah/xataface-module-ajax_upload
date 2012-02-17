@@ -82,6 +82,18 @@ class Dataface_FormTool_ajax_upload  {
 		$atts['data-xf-thumbnail-height'] = $thumbnailHeight;
 		
 		
+		$savepath = $field['savepath'];
+		$s = DIRECTORY_SEPARATOR;
+		$fval = $record->val($field['name']);
+		if ( $fval ){
+			$fpath = $savepath.$s.basename($fval);
+			if ( file_exists($fpath) ){
+				$atts['data-xf-file-size'] = filesize($fpath);
+			}
+		
+		}
+		
+		
 		
 		$jt = Dataface_JavascriptTool::getInstance();
 		$jt->addPath(dirname(__FILE__).'/js', $mod->getBaseURL().'/js');

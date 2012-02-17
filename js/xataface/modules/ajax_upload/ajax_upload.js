@@ -25,6 +25,8 @@
 //require-css <jquery-ui/jquery-ui.css>
 //require <xataface/modules/ajax_upload/lib/jquery.iframe-transport.js>
 //require <xataface/modules/ajax_upload/lib/jquery.fileupload.js>
+//require <xataface/modules/ajax_upload/lib/jquery.lightbox-0.5.min.js>
+//require-css <xataface/modules/ajax_upload/lib/jquery-lightbox/css/jquery.lightbox-0.5.css>
 
 //require-css <xataface/modules/ajax_upload/ajax_upload.css>  
 (function(){
@@ -42,28 +44,29 @@
 	 * @param {Function} callback A callback function to be called if the file is successfully
 	 *		removed.
 	 */
-	function deleteFile(recordId, field, callback){
+	function deleteFile(table, field, recordId, callback){
 		if ( confirm('Are you sure you want to delete this file?  This cannot be undone.') ){
 			var q = {
-				'-action': 'delete_file',
+				'-action': 'ajax_upload_delete_temp_file',
 				'--field': field,
-				'--format': 'json',
-				'--recordid': recordId
+				'-table': table,
+				'--recordId': recordId
 			};
 			$.post(DATAFACE_SITE_HREF, q, function(res){
-			
+		
 				try {
-					if ( res.success ){
-						alert(res['--msg']);
-						
-						if ( typeof(callback) == 'function') callback(res);
-						
+					if ( res.code == 200 ){
+						callback(res);
 					} else {
-						alert(res['--msg']);
+						if ( res.message ) throw res.message;
+						else throw 'Failed to delete file.  Unspecified server error.  See server logs for details.';
 					}
-				
 				} catch (e){
-					alert("Failed to delete file.  Check server error log for details.");
+					try {
+						callback(res);
+					} catch (e2){
+						alert(e2);
+					}
 				}
 			});
 		}
@@ -84,6 +87,7 @@
 			'-table': table,
 			'--fileId': fileId
 		};
+		
 		
 		$.post(DATAFACE_SITE_HREF, q, function(res){
 		
@@ -119,11 +123,33 @@
 		$('input.xf-ajax-upload', node).each(function(){
 			
 			var self = this;
+			if ( $(self).val()){
+				$(self).attr('data-xf-file-name', $(self).val());
+			}
 			var fieldName = $(self).attr('data-xf-field');
 			var tableName = $(self).attr('data-xf-table');
 			var thumbnailWidth = $(self).attr('data-xf-thumbnail-width');
 			var thumbnailHeight = $(self).attr('data-xf-thumbnail-height');
 			var uploadInProgress = false; // flag to check if there is an upload in progress
+			
+			
+			var formGroup = $(self).closest('.xf-form-group');
+			var form = $(self).closest('form');
+			
+			
+			
+			
+			
+			var recordId = formGroup.attr('data-xf-record-id');
+			if ( recordId == 'new' || recordId == undefined ) recordId = '';
+
+			
+			var deleteBtn = $('<button class="xf-ajax-file-upload-delete-button">Delete</button>');
+			var replaceBtn = $('<button class="xf-ajax-file-upload-replace-button">Replace</button>');
+			var cancelUploadBtn = $('<button class="xf-ajax-file-upload-cancel-upload-button">Cancel</button>');
+			var cancelReplaceBtn = $('<button class="xf-ajax-file-upload-cancel-replace-button">Cancel</button>');
+			var jqXHR = null;
+			
 			
 			
 			function fileSizeStr(bytes){
@@ -149,6 +175,7 @@
 			}
 			
 			
+			
 			function update(){
 			
 				if ( $(self).val() ){
@@ -158,19 +185,37 @@
 					if ( val.indexOf('xftmpimg://') == 0 ){
 						thumbnailUrl += '&--tempfileid='+encodeURIComponent(val.substr(11));
 					}
+					if ( recordId ){
+						thumbnailUrl += '&--recordId='+encodeURIComponent(recordId);
+					}
+					
+					var previewUrl = thumbnailUrl;
 					
 					thumbnailUrl += '&--max_width='+encodeURIComponent(thumbnailWidth);
 					thumbnailUrl += '&--max_height='+encodeURIComponent(thumbnailHeight);
 					
-					if ( !$(self).attr('data-xf-file-name') || ($(self).attr('data-xf-file-name').indexOf('xftmpimg://') == 0) ){
+					previewUrl += '&--max_width='+encodeURIComponent(Math.round($(window).width()*0.75));
+					previewUrl += '&--max_height='+encodeURIComponent(Math.round($(window).height()*0.75));
+					
+					if ( !$(self).attr('data-xf-file-size') || 
+						 !$(self).attr('data-xf-file-type') || 
+						 !$(self).attr('data-xf-file-name') || 
+						 ($(self).attr('data-xf-file-name').indexOf('xftmpimg://') == 0) ){
 						
 						var q = {
 						
 							'-table': tableName,
 							'--field': fieldName,
-							'--fileid': val.substr(11),
+							//'--fileid': val.substr(11),
 							'-action': 'ajax_upload_get_temp_file_details'
 						};
+						
+						if ( val.indexOf('xftmpimg://') == 0){
+							q['--fileid'] = val.substr(11);
+						} else {
+							q['--recordId'] = recordId;
+						}
+						
 						//alert("about to make request for file "+val.substr(11)); 
 						var loadedDetails = false;
 						$(self).attr('data-xf-file-name', 'Loading details...');
@@ -193,16 +238,21 @@
 								$(self).attr('data-xf-file-name', res.name);
 								$(self).attr('data-xf-file-size', res.size);
 								$(self).attr('data-xf-file-type', res.type);
+								if ( res.url ){
+									$(self).attr('data-xf-preview-url', res.url);
+								}
 								loadedDetails = true;
 								update();
 							} catch (e){
 								$(self).attr('data-xf-file-name', 'File not found');
 								$(self).attr('data-xf-file-size', 0);
 								$(self).attr('data-xf-file-type', 'none');
+								$(self).attr('data-xf-preview-url', '');
 								update();
 							}
 							
 						});
+				
 					
 					} else {
 					
@@ -212,17 +262,31 @@
 						}
 						
 						var fileSize = $(self).attr('data-xf-file-size');
-						if ( !fileSize ){
-							fileSize = '??';
-						}
+						//if ( !fileSize ){
+						//	fileSize = '??';
+						//}
 						
 						$('.xf-ajax-upload-filename', previewDiv).text(fileName);
 						
-						
-						$('.xf-ajax-upload-filesize', previewDiv).text(fileSizeStr(fileSize));
+						if ( fileSize ){
+							$('.xf-ajax-upload-filesize', previewDiv).show().text(fileSizeStr(fileSize));
+						} else {
+							$('.xf-ajax-upload-filesize', previewDiv).hide();
+						}
+						previewLink.unbind('click');
+						var fileType = $(self).attr('data-xf-file-type');
+						if ( fileType.indexOf('image/') == 0 ){
+							previewLink.lightBox();
+							previewLink.attr('href', previewUrl);
+						} else if ( $(self).attr('data-xf-preview-url') )  {
+							previewLink.attr('href', $(self).attr('data-xf-preview-url'));
+						} else {
+							previewLink.click(function(){ return false;});
+						}
 						
 						// The field is not empty.. we show the preview
 						$('.xf-ajax-upload-thumbnail', previewDiv).attr('src', thumbnailUrl);
+						
 						
 				
 						previewDiv.show();
@@ -243,22 +307,7 @@
 			
 			$(self).hide();
 			
-			var formGroup = $(self).closest('.xf-form-group');
-			var form = $(self).closest('form');
 			
-			
-			
-			
-			
-			var recordId = formGroup.attr('data-xf-record-id');
-			if ( recordId == 'new' || recordId == undefined ) recordId = '';
-
-			
-			var deleteBtn = $('<button class="xf-ajax-file-upload-delete-button">Delete</button>');
-			var replaceBtn = $('<button class="xf-ajax-file-upload-replace-button">Replace</button>');
-			var cancelUploadBtn = $('<button class="xf-ajax-file-upload-cancel-upload-button">Cancel</button>');
-			var cancelReplaceBtn = $('<button class="xf-ajax-file-upload-cancel-replace-button">Cancel</button>');
-			var jqXHR = null;
 			
 			/**
 			 * The delete button that appears on the preview field deletes the file 
@@ -302,7 +351,12 @@
 					);
 					
 				} else {
-					deleteFile(recordId, $(self).attr('data-xf-field'), deleteCallback);
+					deleteFile(
+						$(self).attr('data-xf-table'),
+						$(self).attr('data-xf-field'),
+						recordId,
+						deleteCallback
+					);
 				}
 				
 				return false;
@@ -336,12 +390,15 @@
 				.insertAfter(self);
 				
 			
+			var previewImg = $('<img src="#" class="xf-ajax-upload-thumbnail"/>');
+			var previewLink = $('<a href="#" target="_blank" class="xf-ajax-upload-thumbnail-preview"/>')
+				.append(previewImg);
 			
 		
 			var previewDiv = $('<div/>')
 				.addClass('xf-ajax-upload-file-preview')
 				//.css('display','none')
-				.append($('<img src="#" class="xf-ajax-upload-thumbnail"/>'))
+				.append(previewLink)
 				.append($('<div class="xf-ajax-upload-filename">Filename</div>'))
 				.append($('<div class="xf-ajax-upload-filesize">Filesize</div>'))
 				.append(
