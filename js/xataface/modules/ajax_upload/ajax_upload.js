@@ -440,6 +440,7 @@
 			
 			var maxFileSize = parseInt($(self).attr('data-xf-max-file-size'));
 			uploadDiv.fileupload({
+				pasteZone : null,
 				dataType: 'json',
 				maxFileSize: maxFileSize,
 				error: function(jqXHR, textStatus, errorThrown){
