@@ -37,7 +37,7 @@
 	 */
 	private $baseURL = null;
 	
-	
+	private $pathsRegistered = false;
 	
 	/**
 	 * @brief Initializes the depselect module and registers all of the event listener.
@@ -63,6 +63,15 @@
 		
 		$app->registerEventListener('beforeSave', array($this, 'beforeSave'));
 		
+	}
+	
+	function registerPaths(){
+		if ( !$this->pathsRegistered ){
+			Dataface_JavascriptTool::getInstance()
+				->addPath(dirname(__FILE__).'/js', $this->getBaseURL().'/js');
+			Dataface_CSSTool::getInstance()
+				->addPath(dirname(__FILE__).'/css', $this->getBaseURL().'/css');
+		}
 	}
 	
 	function block__head_slot(){
@@ -176,6 +185,9 @@
 		}
 		
 		$record->setValue($fieldName, $destFileName);
+		if ( @$infoArr['type'] and @$field['mimetype'] ){
+			$record->setValue($field['mimetype'], $infoArr['type']);
+		}
 		
 		
 		
