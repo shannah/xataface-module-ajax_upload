@@ -249,7 +249,8 @@
 			
 				
 			var uploadForm = $(@@(xataface/modules/ajax_upload/upload_form.html)).insertAfter(self.uploadDiv);
-			
+			//console.log("About to send upload");
+			//console.log(self);
 			$(self.uploadDiv).fileupload({
 				dataType: 'json',
 				maxFileSize: self.maxFileSize,
@@ -340,13 +341,13 @@
 					$(self.uploadDiv).hide();
 				
 				},
-				formData: [
+				formData: function(){ return [
 					{name: '-action', value: 'ajax_upload_handleupload'},
 					{name: '--field', value: self.fieldName},
 					{name: '-table', value: self.tableName},
 					{name: '--record-id', value: self.recordId}
 						
-				]
+				]}
 			})
 				.bind('fileuploadprogress', function(e, data){
 					$(self.progressBar).progressbar({value: (parseInt(data.loaded / data.total * 100, 10))});
@@ -383,7 +384,7 @@
 				if ( self.recordId ){
 					self.thumbnailUrl += '&--recordId='+encodeURIComponent(self.recordId);
 				}
-				console.log("updating upload thumbnail "+self.thumbnailUrl);
+				//console.log("updating upload thumbnail "+self.thumbnailUrl);
 				self.previewUrl = self.thumbnailUrl;
 				
 				self.thumbnailUrl += '&--max_width='+encodeURIComponent(self.thumbnailWidth);
