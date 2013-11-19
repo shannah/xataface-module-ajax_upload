@@ -51,7 +51,7 @@ class actions_ajax_upload_get_temp_file_details {
 				
 			}
 			if ( !$val ){
-				throw new Exception("No value found for this field");
+                                throw new Exception("No value found for this field : {$query['--field']}");
 			}
 			$filePath = $path.DIRECTORY_SEPARATOR.basename($val);
 			

@@ -9,6 +9,7 @@
 //require-css <xataface/modules/ajax_upload/ajax_upload.css>  
 
 (function(){
+        window.XF_LANG = window.XF_LANG || null;
 	var $ = jQuery;
 	var ajax_upload = XataJax.load('xataface.modules.ajax_upload');
 	ajax_upload.UploadController = UploadController;
@@ -341,13 +342,19 @@
 					$(self.uploadDiv).hide();
 				
 				},
-				formData: function(){ return [
+				formData: function(){ var out =  [
 					{name: '-action', value: 'ajax_upload_handleupload'},
 					{name: '--field', value: self.fieldName},
 					{name: '-table', value: self.tableName},
-					{name: '--record-id', value: self.recordId}
+					{name: '--record-id', value: self.recordId},
+                                        {name: '--lang', value : window.XF_LANG}
 						
-				]}
+                                    ];
+                                    if ( !window.XF_LANG ){
+                                        out.pop();
+                                    }
+                                    return out;
+                                }
 			})
 				.bind('fileuploadprogress', function(e, data){
 					$(self.progressBar).progressbar({value: (parseInt(data.loaded / data.total * 100, 10))});
@@ -377,7 +384,8 @@
 				self.thumbnailUrl = DATAFACE_SITE_HREF
 					+'?-action=ajax_upload_get_thumbnail&--field='
 					+encodeURIComponent(self.fieldName)
-					+'&-table='+encodeURIComponent(self.tableName);
+					+'&-table='+encodeURIComponent(self.tableName)
+                                        +((window.XF_LANG)?('&--lang='+encodeURIComponent(window.XF_LANG)):'');
 				if ( val.indexOf('xftmpimg://') == 0 ){
 					self.thumbnailUrl += '&--tempfileid='+encodeURIComponent(val.substr(11));
 				}
@@ -392,6 +400,7 @@
 				
 				self.previewUrl += '&--max_width='+encodeURIComponent(Math.round($(window).width()*0.75));
 				self.previewUrl += '&--max_height='+encodeURIComponent(Math.round($(window).height()*0.75));
+                                self.previewUrl += ((window.XF_LANG)?('&--lang='+encodeURIComponent(window.XF_LANG)):'');
 				
 				if ( self.fileSize == null || 
 					 self.fileType == null || 
@@ -403,8 +412,12 @@
 						'-table': self.tableName,
 						'--field': self.fieldName,
 						//'--fileid': val.substr(11),
-						'-action': 'ajax_upload_get_temp_file_details'
+						'-action': 'ajax_upload_get_temp_file_details',
+                                                '--lang' : window.XF_LANG
 					};
+                                        if ( !window.XF_LANG ){
+                                            delete q['--lang'];
+                                        }
 					
 					if ( val.indexOf('xftmpimg://') == 0){
 						q['--fileid'] = val.substr(11);

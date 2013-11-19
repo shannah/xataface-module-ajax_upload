@@ -31,7 +31,7 @@
 //require-css <xataface/modules/ajax_upload/ajax_upload.css>  
 (function(){
 	var $ = jQuery;
-	
+	window.XF_LANG = window.XF_LANG || null;
 	
 	/**
 	 * Deletes a file that is currently in a field.  This really just duplicates
@@ -50,8 +50,12 @@
 				'-action': 'ajax_upload_delete_temp_file',
 				'--field': field,
 				'-table': table,
-				'--recordId': recordId
+				'--recordId': recordId,
+                                '--lang' : window.XF_LANG
 			};
+                        if ( !window.XF_LANG ){
+                            delete q['--lang'];
+                        }
 			$.post(DATAFACE_SITE_HREF, q, function(res){
 		
 				try {
@@ -85,9 +89,12 @@
 			'-action': 'ajax_upload_delete_temp_file',
 			'--field': field,
 			'-table': table,
-			'--fileId': fileId
+			'--fileId': fileId,
+                        '--lang' : window.XF_LANG
 		};
-		
+		if ( !window.XF_LANG ){
+                    delete q['--lang'];
+                }
 		
 		$.post(DATAFACE_SITE_HREF, q, function(res){
 		
@@ -193,10 +200,14 @@
 					
 					thumbnailUrl += '&--max_width='+encodeURIComponent(thumbnailWidth);
 					thumbnailUrl += '&--max_height='+encodeURIComponent(thumbnailHeight);
-					
+					if ( window.XF_LANG) {
+                                            thumbnailUrl += '&--lang='+encodeURIComponent(window.XF_LANG);
+                                        }
 					previewUrl += '&--max_width='+encodeURIComponent(Math.round($(window).width()*0.75));
 					previewUrl += '&--max_height='+encodeURIComponent(Math.round($(window).height()*0.75));
-					
+                                        if ( window.XF_LANG){
+                                            previewUrl += '&--lang='+encodeURIComponent(window.XF_LANG);
+                                        }
 					if ( !$(self).attr('data-xf-file-size') || 
 						 !$(self).attr('data-xf-file-type') || 
 						 !$(self).attr('data-xf-file-name') || 
@@ -207,8 +218,12 @@
 							'-table': tableName,
 							'--field': fieldName,
 							//'--fileid': val.substr(11),
-							'-action': 'ajax_upload_get_temp_file_details'
+							'-action': 'ajax_upload_get_temp_file_details',
+                                                        '--lang' : window.XF_LANG
 						};
+                                                if ( !window.XF_LANG ){
+                                                    delete q['--lang'];
+                                                }
 						
 						if ( val.indexOf('xftmpimg://') == 0){
 							q['--fileid'] = val.substr(11);
@@ -438,9 +453,21 @@
 				
 			var uploadForm = $(@@(xataface/modules/ajax_upload/upload_form.html)).insertAfter(uploadDiv);
 			
+                        var formData = [
+					{name: '-action', value: 'ajax_upload_handleupload'},
+					{name: '--field', value: $(self).attr('data-xf-field')},
+					{name: '-table', value: $(self).attr('data-xf-table')},
+					{name: '--record-id', value: recordId},
+                                        {name: '--lang', value : window.XF_LANG}
+						
+				];
+                        if ( !window.XF_LANG){
+                            formData.pop();
+                        }
+                        
 			var maxFileSize = parseInt($(self).attr('data-xf-max-file-size'));
 			uploadDiv.fileupload({
-				pasteZone : null,
+                                pasteZone : null,
 				dataType: 'json',
 				maxFileSize: maxFileSize,
 				error: function(jqXHR, textStatus, errorThrown){
@@ -530,13 +557,7 @@
 					uploadDiv.hide();
 				
 				},
-				formData: [
-					{name: '-action', value: 'ajax_upload_handleupload'},
-					{name: '--field', value: $(self).attr('data-xf-field')},
-					{name: '-table', value: $(self).attr('data-xf-table')},
-					{name: '--record-id', value: recordId}
-						
-				]
+				formData: formData
 			})
 				.bind('fileuploadprogress', function(e, data){
 					progressBar.progressbar({value: (parseInt(data.loaded / data.total * 100, 10))});
