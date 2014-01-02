@@ -399,6 +399,7 @@
 				return false;
 			});
 			
+			$('div.xf-ajax-upload-wrapper', $(self).parent()).remove();
 			
 			var wrapperDiv = $('<div/>')
 				.addClass('xf-ajax-upload-wrapper')
