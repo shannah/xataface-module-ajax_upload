@@ -148,7 +148,7 @@
 			
 			
 			var recordId = formGroup.attr('data-xf-record-id');
-			if ( recordId == 'new' || recordId == undefined ) recordId = '';
+			if ( recordId == 'new' || recordId == undefined || recordId.indexOf(tableName) !== 0 ) recordId = '';
 
 			
 			var deleteBtn = $('<button class="xf-ajax-file-upload-delete-button">Delete</button>');

@@ -68,8 +68,11 @@ class actions_ajax_upload_handleupload {
 			// in the fields.ini file (e.g. mimetype, extension, file size, etc..).
 			
 			$table = $record->table();
+			error_log("Table is ".$table->tablename);
 			$field =& $table->getField($fieldName);
-			
+			if ( PEAR::isError($field) ){
+				throw new Exception("Failed to get field definition for field $fieldName");
+			}
 			if ( $field['Type'] != 'container' ){
 				throw new Exception("The upload field '".$fieldName."' of table '".$tableName."' is not a container.  Set it to Type=container in the fields.ini file.");
 			}
