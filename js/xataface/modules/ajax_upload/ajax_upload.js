@@ -147,7 +147,7 @@
 			
 			
 			
-			var recordId = formGroup.attr('data-xf-record-id');
+			var recordId = formGroup.attr('data-xf-record-id') || '';
 			var recordIdTable = recordId.substr(0, recordId.indexOf('?'));
 			var recordIsRelated = (recordIdTable.indexOf('/') > 0);
 			if ( recordId == 'new' || recordId == undefined || (recordId.indexOf(tableName) !== 0 && !recordIsRelated) ) recordId = '';
