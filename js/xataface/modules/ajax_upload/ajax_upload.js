@@ -148,7 +148,9 @@
 			
 			
 			var recordId = formGroup.attr('data-xf-record-id');
-			if ( recordId == 'new' || recordId == undefined || recordId.indexOf(tableName) !== 0 ) recordId = '';
+			var recordIdTable = recordId.substr(0, recordId.indexOf('?'));
+			var recordIsRelated = (recordIdTable.indexOf('/') > 0);
+			if ( recordId == 'new' || recordId == undefined || (recordId.indexOf(tableName) !== 0 && !recordIsRelated) ) recordId = '';
 
 			
 			var deleteBtn = $('<button class="xf-ajax-file-upload-delete-button">Delete</button>');
