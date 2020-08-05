@@ -483,6 +483,7 @@
 					}
 					uploadInProgress = false;
 					uploadDiv.show();
+                    console.log("error log ", this);
 				
 				},
 				url: DATAFACE_SITE_HREF+'?-action=ajax_upload_handleupload',
@@ -491,8 +492,11 @@
 					progressDiv.hide();
 					
 					$.each(data.result, function(index, file){
+                        uploadInProgress = false;
 						if ( typeof(file.error) != 'undefined' && file.error ){
 							alert(file.message);
+        					
+        					uploadDiv.show();
 						} else {
 							$(self).attr('data-xf-file-size', file.size);
 							$(self).attr('data-xf-file-name', file.name);
@@ -507,10 +511,11 @@
 					});
 				},
 				beforeSend: function(event, data){
-					
+
+
 					for (var i=0; i<data.files.length; i++ ){
-						if ( data.files[i].fileSize > maxFileSize ){
-							alert('This file is too big.  Max allowed size is '+maxFileSize+' bytes but this file is '+data.files[i].fileSize+' bytes.');
+						if ( data.files[i].size > maxFileSize ){
+							alert('This file is too big.  Max allowed size is '+maxFileSize+' bytes but this file is '+data.files[i].size+' bytes.');
 							return false;
 						}
 						

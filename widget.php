@@ -122,9 +122,13 @@ class Dataface_FormTool_ajax_upload  {
 		$upload_mb = min($max_upload, $max_post, $memory_limit);
 		//echo "Upload MB: ".$upload_mb;
 		$upload_bytes = $upload_mb*1000*1024;
+        if (@$field['validators'] and @$field['validators']['maxfilesize'] and @$field['validators']['maxfilesize']['arg']) {
+            $upload_bytes = min(intval($field['validators']['maxfilesize']['arg']), $upload_bytes);
+        }
 		if ( @$field['max_size'] ){
 			$upload_bytes = min(intval($field['max_size']), $upload_bytes);
 		}
+        if (@$field['validators']['maxfilesize'])
 		return $upload_bytes;
 	
 	}

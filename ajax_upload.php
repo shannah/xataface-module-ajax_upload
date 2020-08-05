@@ -206,11 +206,10 @@
 	 */
 	function validate(&$field, $value, &$params){
 
-
 		// This bit of validation code is executed for files that have just been uploaded from the form.
 		// It expects the value to be an array of the form:
 		// eg: array('tmp_name'=>'/path/to/uploaded/file', 'name'=>'filename.txt', 'type'=>'image/gif').
-
+        $fieldname = $field['name'];
 		if ( !is_array(@$field['allowed_extensions']) and @$field['allowed_extensions']){
 			$field['allowed_extensions'] = explode(',',@$field['allowed_extensions']);
 		}
@@ -264,8 +263,18 @@
 			return false;
 		}
 
+        if (!@$field['max_size']) {
+            if (@$field['validators'] and @$field['validators']['maxfilesize'] and @$field['validators']['maxfilesize']['arg']) {
+                $field['max_size'] = intval($field['validators']['maxfilesize']['arg']);
+            }
+        }
+
 		if ( @$field['max_size'] and intval($field['max_size']) < intval(@$value['size']) ){
+        
 			$params['message'] = "The file submitted in field '".$fieldname."' is {$value['size']} bytes which exceeds the limit of {$field['max_size']} bytes for this field.";
+            if (@$field['validators'] and @$field['validators']['maxfilesize'] and @$field['validators']['maxfilesize']['message']) {
+                $params['message'] = $field['validators']['maxfilesize']['message'];
+            }
 			return false;
 		}
 
