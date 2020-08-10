@@ -19,7 +19,81 @@
  * Boston, MA  02110-1301, USA.
  *
  */
+if(!function_exists('mime_content_type')) {
 
+    function mime_content_type($filename) {
+
+        $mime_types = array(
+
+            'txt' => 'text/plain',
+            'htm' => 'text/html',
+            'html' => 'text/html',
+            'php' => 'text/html',
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'json' => 'application/json',
+            'xml' => 'application/xml',
+            'swf' => 'application/x-shockwave-flash',
+            'flv' => 'video/x-flv',
+
+            // images
+            'png' => 'image/png',
+            'jpe' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'jpg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'bmp' => 'image/bmp',
+            'ico' => 'image/vnd.microsoft.icon',
+            'tiff' => 'image/tiff',
+            'tif' => 'image/tiff',
+            'svg' => 'image/svg+xml',
+            'svgz' => 'image/svg+xml',
+
+            // archives
+            'zip' => 'application/zip',
+            'rar' => 'application/x-rar-compressed',
+            'exe' => 'application/x-msdownload',
+            'msi' => 'application/x-msdownload',
+            'cab' => 'application/vnd.ms-cab-compressed',
+
+            // audio/video
+            'mp3' => 'audio/mpeg',
+            'qt' => 'video/quicktime',
+            'mov' => 'video/quicktime',
+
+            // adobe
+            'pdf' => 'application/pdf',
+            'psd' => 'image/vnd.adobe.photoshop',
+            'ai' => 'application/postscript',
+            'eps' => 'application/postscript',
+            'ps' => 'application/postscript',
+
+            // ms office
+            'doc' => 'application/msword',
+            'rtf' => 'application/rtf',
+            'xls' => 'application/vnd.ms-excel',
+            'ppt' => 'application/vnd.ms-powerpoint',
+
+            // open office
+            'odt' => 'application/vnd.oasis.opendocument.text',
+            'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+        );
+
+        $ext = strtolower(array_pop(explode('.',$filename)));
+        if (array_key_exists($ext, $mime_types)) {
+            return $mime_types[$ext];
+        }
+        elseif (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME);
+            $mimetype = finfo_file($finfo, $filename);
+            finfo_close($finfo);
+            return $mimetype;
+        }
+        else {
+            return 'application/octet-stream';
+        }
+    }
+}
 /**
  * @brief The main depselect module class.  This loads all of the dependencies for the
  * 	module.
@@ -206,10 +280,11 @@
 	 */
 	function validate(&$field, $value, &$params){
 
+
 		// This bit of validation code is executed for files that have just been uploaded from the form.
 		// It expects the value to be an array of the form:
 		// eg: array('tmp_name'=>'/path/to/uploaded/file', 'name'=>'filename.txt', 'type'=>'image/gif').
-        $fieldname = $field['name'];
+
 		if ( !is_array(@$field['allowed_extensions']) and @$field['allowed_extensions']){
 			$field['allowed_extensions'] = explode(',',@$field['allowed_extensions']);
 		}
@@ -263,18 +338,8 @@
 			return false;
 		}
 
-        if (!@$field['max_size']) {
-            if (@$field['validators'] and @$field['validators']['maxfilesize'] and @$field['validators']['maxfilesize']['arg']) {
-                $field['max_size'] = intval($field['validators']['maxfilesize']['arg']);
-            }
-        }
-
 		if ( @$field['max_size'] and intval($field['max_size']) < intval(@$value['size']) ){
-        
 			$params['message'] = "The file submitted in field '".$fieldname."' is {$value['size']} bytes which exceeds the limit of {$field['max_size']} bytes for this field.";
-            if (@$field['validators'] and @$field['validators']['maxfilesize'] and @$field['validators']['maxfilesize']['message']) {
-                $params['message'] = $field['validators']['maxfilesize']['message'];
-            }
 			return false;
 		}
 
@@ -308,7 +373,9 @@
 			$mimetype = mime_content_type($path);
 
 		}
-
+		if (!$mimetype) {
+			$mimetype = 'application/octet-stream';
+		}
 
 		return $mimetype;
 
