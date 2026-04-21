@@ -302,10 +302,10 @@ if(!function_exists('mime_content_type')) {
 			$field['disallowed_mimetypes'] = explode(',',@$field['disallowed_mimetypes']);
 		}
 
-		$field['allowed_extensions'] = @array_map('strtolower', @$field['allowed_extensions']);
-		$field['allowed_mimetypes'] = @array_map('strtolower', @$field['allowed_mimetypes']);
-		$field['disallowed_extensions'] = @array_map('strtolower', @$field['disallowed_extensions']);
-		$field['disallowed_mimetypes'] = @array_map('strtolower', @$field['disallowed_mimetypes']);
+		$field['allowed_extensions'] = is_array(@$field['allowed_extensions']) ? array_map('strtolower', $field['allowed_extensions']) : null;
+		$field['allowed_mimetypes'] = is_array(@$field['allowed_mimetypes']) ? array_map('strtolower', $field['allowed_mimetypes']) : null;
+		$field['disallowed_extensions'] = is_array(@$field['disallowed_extensions']) ? array_map('strtolower', $field['disallowed_extensions']) : null;
+		$field['disallowed_mimetypes'] = is_array(@$field['disallowed_mimetypes']) ? array_map('strtolower', $field['disallowed_mimetypes']) : null;
 		// We do some special validation for file uploads
 		// Validate -- make sure that it is the proper mimetype and extension.
 		if ( is_array( @$field['allowed_mimetypes'] ) and count($field['allowed_mimetypes']) > 0 ){
