@@ -79,7 +79,8 @@ if(!function_exists('mime_content_type')) {
             'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
         );
 
-        $ext = strtolower(array_pop(explode('.',$filename)));
+        $parts = explode('.', $filename);
+        $ext = strtolower(array_pop($parts));
         if (array_key_exists($ext, $mime_types)) {
             return $mime_types[$ext];
         }
@@ -204,7 +205,10 @@ if(!function_exists('mime_content_type')) {
 			throw new Exception("Upload to field $fieldName failed.  The info file $infoPath for file $filePath could not be found.");
 		}
 
-		$infoArr = unserialize(file_get_contents($infoPath));
+		$raw = file_get_contents($infoPath);
+		$infoArr = (PHP_VERSION_ID >= 70000)
+			? unserialize($raw, array('allowed_classes' => false))
+			: unserialize($raw);
 		if ( !is_array($infoArr) ){
 			throw new Exception("Upload to field $fieldName failed.  The info file $infoPath is expected to contain an array but contained something else.");
 
@@ -236,7 +240,7 @@ if(!function_exists('mime_content_type')) {
 				//$filebase = $filename;
 
 			}
-			if ( $filebase{strlen($filebase)-1} == '-' ) $filebase = substr($filebase,0, strlen($filebase)-1);
+			if ( substr($filebase, -1) === '-' ) $filebase = substr($filebase, 0, -1);
 			$fileindex++;
 			$filebase = $filebase.'-'.$fileindex;
 			$destFileName = $filebase.'.'.$extension;
