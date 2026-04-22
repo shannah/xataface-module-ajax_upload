@@ -79,7 +79,8 @@ if(!function_exists('mime_content_type')) {
             'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
         );
 
-        $ext = strtolower(array_pop(explode('.',$filename)));
+        $parts = explode('.', $filename);
+        $ext = strtolower(array_pop($parts));
         if (array_key_exists($ext, $mime_types)) {
             return $mime_types[$ext];
         }
@@ -204,7 +205,10 @@ if(!function_exists('mime_content_type')) {
 			throw new Exception("Upload to field $fieldName failed.  The info file $infoPath for file $filePath could not be found.");
 		}
 
-		$infoArr = unserialize(file_get_contents($infoPath));
+		$raw = file_get_contents($infoPath);
+		$infoArr = (PHP_VERSION_ID >= 70000)
+			? unserialize($raw, array('allowed_classes' => false))
+			: unserialize($raw);
 		if ( !is_array($infoArr) ){
 			throw new Exception("Upload to field $fieldName failed.  The info file $infoPath is expected to contain an array but contained something else.");
 
@@ -236,7 +240,7 @@ if(!function_exists('mime_content_type')) {
 				//$filebase = $filename;
 
 			}
-			if ( $filebase{strlen($filebase)-1} == '-' ) $filebase = substr($filebase,0, strlen($filebase)-1);
+			if ( substr($filebase, -1) === '-' ) $filebase = substr($filebase, 0, -1);
 			$fileindex++;
 			$filebase = $filebase.'-'.$fileindex;
 			$destFileName = $filebase.'.'.$extension;
@@ -298,10 +302,10 @@ if(!function_exists('mime_content_type')) {
 			$field['disallowed_mimetypes'] = explode(',',@$field['disallowed_mimetypes']);
 		}
 
-		$field['allowed_extensions'] = @array_map('strtolower', @$field['allowed_extensions']);
-		$field['allowed_mimetypes'] = @array_map('strtolower', @$field['allowed_mimetypes']);
-		$field['disallowed_extensions'] = @array_map('strtolower', @$field['disallowed_extensions']);
-		$field['disallowed_mimetypes'] = @array_map('strtolower', @$field['disallowed_mimetypes']);
+		$field['allowed_extensions'] = is_array(@$field['allowed_extensions']) ? array_map('strtolower', $field['allowed_extensions']) : null;
+		$field['allowed_mimetypes'] = is_array(@$field['allowed_mimetypes']) ? array_map('strtolower', $field['allowed_mimetypes']) : null;
+		$field['disallowed_extensions'] = is_array(@$field['disallowed_extensions']) ? array_map('strtolower', $field['disallowed_extensions']) : null;
+		$field['disallowed_mimetypes'] = is_array(@$field['disallowed_mimetypes']) ? array_map('strtolower', $field['disallowed_mimetypes']) : null;
 		// We do some special validation for file uploads
 		// Validate -- make sure that it is the proper mimetype and extension.
 		if ( is_array( @$field['allowed_mimetypes'] ) and count($field['allowed_mimetypes']) > 0 ){

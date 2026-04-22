@@ -39,7 +39,9 @@ class actions_ajax_upload_get_temp_file_details {
 			if ( !$serializedData ){
 				throw new Exception("No info found in info file.");
 			}
-			$data = unserialize($serializedData);
+			$data = (PHP_VERSION_ID >= 70000)
+				? unserialize($serializedData, array('allowed_classes' => false))
+				: unserialize($serializedData);
 		} else {
 			$recordId = $query['--recordId'];
 			if ( $recordId ) $record = df_get_record_by_id($recordId);
